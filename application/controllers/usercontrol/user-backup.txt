@@ -1,0 +1,214 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+/**
+ * Class User
+ *
+ * This class will handle all login and
+ * registration requests to and from the server to client.
+ *
+ * This class will also handle authentication requests made
+ * be other clients like phones and other websites.
+ *
+ * Worked here on April 13, 2015
+ *
+ * Worked here on April 16, 2015
+ *
+ * Worked here on April 19, 2015.
+ *
+ */
+class User extends CI_Controller {
+
+    private $data = array();
+
+    /**
+     * This variable stores the location of the
+     * view file that contains the HEADER.
+     * It is introduced to make the Controller
+     * more dynamic.
+     * Worked here on April 19, 2015.
+     *
+     * @var String
+     */
+    private $header = 'usercontrol/header';
+    /**
+     * This variable stores the location of the
+     * view file that contains the FOOTER.
+     * It is introduced to make the Controller
+     * more dynamic.
+     * Worked here on April 19, 2015.
+     *
+     * @var String
+     */
+    private $footer = 'usercontrol/footer';
+
+    /**
+     * The index method which is the default
+     * method which will execute when control
+     * is navigated to index.php\usercontrol\user\
+     */
+    public function index() {
+        $data['title'] = "DashBoard";
+        $this->load->model('User_model');
+        $user = new User_model();
+        $data['result'] = $user->getUserList();
+        $this->load->view($this->header, $data);
+        $this->load->view('usercontrol/user_view',$data);
+        $this->load->view($this->footer);
+    }
+
+    /**
+     * This method loads when the control is
+     * navigated to: index.php\usercontrol\user\login.
+     * This method also processes the input and output
+     * of the login method.
+     *
+     * Worked here on April 19, 2015.
+     * Worked here on April 20, 2015.
+     */
+    public function login()
+    {
+        $this->load->helper(array('form'));
+        $this->load->library('form_validation');
+        $data['form-name'] = $this->input->post('form-name');
+        if($data['form-name']=='login-form') {
+            $form_name = $data['form-name'];
+            $data = $this->retrive_login_data($form_name);
+
+            $validation_OK = ($this->form_validation->run('user/login')== FALSE) ? FALSE  :  TRUE ;
+
+            if($validation_OK==TRUE) {
+
+                //echo "<h1>Validation OK</h1>";
+                //redirect('/usercontrol/user');
+            }
+            else {
+                $this->form_validation->set_error_delimiters();
+
+
+                //echo validation_errors();
+            }
+
+
+            //redirect(base_url());
+        }
+        $data['title'] = "Login";
+        $this->load->view($this->header, $data);
+        $this->load->view('usercontrol/login');
+        $this->load->view($this->footer);
+
+    }
+
+    /**
+     * The registration method handles registration input and outputs.
+     * Checks validity and then stores the user information in the database.
+     *
+     * Worked here on April 13, 2015.
+     */
+    public function registration()
+    {
+        $this->load->helper('form');
+        $this->load->library('form_validation');
+
+
+        $data['form-name'] = $this->input->post('form-name');
+
+
+        if($data['form-name']=='registration-form') {
+
+            $form_name = $data['form-name'];
+            /**
+             * Retrive data from the form
+             * Then,
+             * Validate retrieved Data
+             */
+            $data = $this->retrive_registration_data($form_name);
+
+            $validation_OK = ($this->form_validation->run()== FALSE) ? FALSE  :  TRUE ;
+
+            /**
+             *
+             * The code here has to be reduced.
+             * The code is messy here.
+             */
+            if($validation_OK==TRUE) {
+                $this->load->model('User_model');
+                $user = new user_model();
+                $user->UserID = $user->getNextID();
+                $user->Email = $data['Email'];
+                $user->Password = $data['Password'];
+                $user->Firstname = $data['Firstname'];
+                $user->Lastname = $data['Lastname'];
+                //echo "<h1>Validation OK</h1>";
+                $user->dbInsert();
+                //redirect('/usercontrol/user');
+
+            }
+            else {
+                $this->form_validation->set_error_delimiters();
+                //echo validation_errors();
+            }
+            //echo validation_errors();
+            /**
+             * Data Test Block
+             */
+            //echo "<h1>Printing data</h1>";
+            //print_r($data);
+            // Data Test Block Ends Here
+
+        }
+
+        $this->initialize("registraton-form", "Registration");
+        $data = $this->data;
+        $this->load->view($this->header, $data);
+        $this->load->view('usercontrol/registration', $data);
+        $this->load->view($this->footer);
+
+    }
+
+    /**
+     * Initializes the variables for data insert.
+     * So that empty or null is send in place of void.
+     *
+     * @param $formName passes the form name
+     * @param $title passes the title of the page
+     *
+     *
+     * Worked here on April 13, 2015.
+     */
+private function initialize($form_name, $title) {
+        $this->data['form_name'] = $form_name;
+        $this->data['title'] = $title;
+        $this->data['Firstname'] = "";
+        $this->data['Lastname'] = "";
+        $this->data['Email'] = "";
+        $this->data['Password'] = "";
+
+
+    }
+
+    /**
+     * Retrives the data from a form
+     * @return array returns an array of user input
+     *
+     * Worked here on April 13, 2015.
+     */
+    private function retrive_registration_data($form_name) {
+        $this->data['Firstname'] = $this->input->post('Firstname');
+        $this->data['Lastname'] = $this->input->post('Lastname');
+        $this->data['Email'] = $this->input->post('Email');
+        $this->data['Password'] = $this->input->post('Password');
+        return $this->data;
+    }
+
+    private function retrive_login_data($form_name) {
+        $this->data['signin-mail'] = $this->input->post('signin-mail');
+        $this->data['signin-pass'] = $this->input->post('signin-pass');
+        $this->load->model('User_model');
+        $this->User_model->Email = $this->data['signin-mail'];
+        $this->User_model->Password = $this->data['signin-pass'];
+        return $this->data;
+    }
+
+    /* End of file User.php */
+    /* Location: ./application/controllers/usercontrol/User.php */
+}

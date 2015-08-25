@@ -1,0 +1,16 @@
+body {
+  padding-top: 50px;
+  padding-bottom: 20px;
+}
+
+#category-view-product-table {
+    width: 50%;
+}
+
+.crud-form {
+    width: 60%;
+}
+
+.item-display-table {
+    width: 60%;
+}
